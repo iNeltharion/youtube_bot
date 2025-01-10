@@ -15,10 +15,30 @@ TOKEN = os.getenv('TOKEN')
 # Инициализация бота
 bot = telebot.TeleBot(TOKEN)
 
+# Максимальная продолжительность видео в секундах (например, 15 минут)
+MAX_DURATION = 15 * 60
+
 # Функция для проверки и создания папок
 def ensure_directory_exists(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
+
+# Функция для получения информации о видео
+def get_video_info(url):
+    try:
+        ydl_opts = {
+            'quiet': True,  # Отключаем вывод в консоль
+            'outtmpl': '%(id)s.%(ext)s',  # Для отладки
+            'extractor-args': ['youtube:formats=mp4'],  # Указываем формат mp4
+            'noplaylist': True,  # Убедимся, что загружается только одно видео
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+            logger.info(f"Информация о видео: {info['title']}")
+            return info
+    except Exception as e:
+        logger.error(f"Ошибка получения информации о видео: {e}")
+        return None
 
 # Функция для скачивания аудио с YouTube
 def download_audio(url, output_dir='temp'):
@@ -26,12 +46,13 @@ def download_audio(url, output_dir='temp'):
         'format': 'bestaudio/best',
         'outtmpl': f'{output_dir}/%(title)s.%(ext)s',
         'extractaudio': True,
-        'noplaylist': True,
-        'quiet': False,
+        'noplaylist': True,  # Отключаем скачивание всего плейлиста
+        'quiet': True,  # Отключаем вывод в консоль
     }
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            logger.info(f"Начинаем скачивание: {url}")
             ydl.download([url])
         logger.info("Загрузка завершена")
 
@@ -63,6 +84,26 @@ def handle_video(message):
 
     # Подтверждение получения ссылки
     bot.send_message(message.chat.id, "Получил ссылку! Начинаю скачивание аудио...")
+    logger.info(f"Получена ссылка на видео: {video_url}")
+
+    # Получаем информацию о видео
+    video_info = get_video_info(video_url)
+
+    if not video_info:
+        bot.send_message(message.chat.id, "Не удалось получить информацию о видео. Попробуйте еще раз.")
+        logger.error("Не удалось получить информацию о видео.")
+        return
+
+    # Проверяем длительность видео
+    duration = video_info.get('duration', 0)
+    logger.info(f"Продолжительность видео: {duration} секунд.")
+    if duration > MAX_DURATION:
+        bot.send_message(
+            message.chat.id,
+            f"Видео слишком длинное! Максимальная продолжительность: {MAX_DURATION // 60} минут."
+        )
+        logger.error("Видео слишком длинное.")
+        return
 
     # Создаем необходимые папки
     ensure_directory_exists('sound')
@@ -100,4 +141,3 @@ def handle_video(message):
 if __name__ == "__main__":
     logging.info('Бот запущен')
     bot.polling(non_stop=True)
-
