@@ -4,6 +4,8 @@ import os
 import telebot
 from dotenv import load_dotenv
 import logging
+import re
+from urllib.parse import urlparse, urlunparse
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -22,6 +24,11 @@ MAX_DURATION = 15 * 60
 def ensure_directory_exists(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
+
+# Очистка URL от параметров
+def clean_url(url):
+    parsed = urlparse(url)
+    return urlunparse(parsed._replace(query=""))
 
 # Функция для получения информации о видео
 def get_video_info(url):
@@ -78,9 +85,9 @@ def start_command(message):
     bot.reply_to(message, "Привет! Отправь ссылку на YouTube видео, и я отправлю тебе аудио.")
 
 # Обработчик сообщений с ссылками
-@bot.message_handler(func=lambda message: message.text.startswith('https://www.youtube.com/'))
+@bot.message_handler(func=lambda message: re.match(r'(https?://)?(www\.)?(m\.)?(youtube\.com|youtu\.be)/.+', message.text))
 def handle_video(message):
-    video_url = message.text.strip()
+    video_url = clean_url(message.text.strip())
 
     # Подтверждение получения ссылки
     bot.send_message(message.chat.id, "Получил ссылку! Начинаю скачивание аудио...")
