@@ -136,9 +136,13 @@ def handle_video(message):
         # Конвертируем в MP3
         convert_audio(downloaded_file, output_file)
 
-        # Отправляем пользователю аудиофайл
+        # Отправляем пользователю аудиофайл и сохраняем file_id
         with open(output_file, 'rb') as audio:
-            bot.send_audio(message.chat.id, audio)
+            sent = bot.send_audio(message.chat.id, audio)
+            audio_file_id = sent.audio.file_id if sent.audio else None
+            audio_title = sent.audio.title if sent.audio and sent.audio.title else os.path.splitext(os.path.basename(downloaded_file))[0]
+            # Сохраняем file_id и название аудио в БД
+            save_link(message.from_user, video_url, audio_file_id, audio_title)
 
         # Удаляем временные файлы
         if os.path.exists(downloaded_file):
