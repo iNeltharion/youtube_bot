@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 import logging
 import re
 from urllib.parse import urlparse, urlunparse
+from db import init_db, save_link
+import show_handlers  # Импортируем весь модуль для регистрации хендлеров
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -16,6 +18,9 @@ TOKEN = os.getenv('TOKEN')
 
 # Инициализация бота
 bot = telebot.TeleBot(TOKEN)
+
+# ID администратора Telegram
+ADMIN_ID = int(os.getenv('ADMIN_ID'))  # Укажите здесь свой Telegram ID
 
 # Максимальная продолжительность видео в секундах (например, 15 минут)
 MAX_DURATION = 15 * 60
@@ -88,6 +93,7 @@ def start_command(message):
 @bot.message_handler(func=lambda message: re.match(r'(https?://)?(www\.)?(m\.)?(youtube\.com|youtu\.be)/.+', message.text))
 def handle_video(message):
     video_url = clean_url(message.text.strip())
+    save_link(message.from_user, video_url)
 
     # Подтверждение получения ссылки
     bot.send_message(message.chat.id, "Получил ссылку! Начинаю скачивание аудио...")
@@ -104,7 +110,8 @@ def handle_video(message):
     # Проверяем длительность видео
     duration = video_info.get('duration', 0)
     logger.info(f"Продолжительность видео: {duration} секунд.")
-    if duration > MAX_DURATION:
+    # Проверяем ограничение только для не-админов
+    if message.from_user.id != ADMIN_ID and duration > MAX_DURATION:
         bot.send_message(
             message.chat.id,
             f"Видео слишком длинное! Максимальная продолжительность: {MAX_DURATION // 60} минут."
@@ -144,7 +151,9 @@ def handle_video(message):
     else:
         bot.send_message(message.chat.id, "Не удалось скачать аудио с YouTube. Попробуйте еще раз.")
 
+show_handlers.register_handlers(bot, ADMIN_ID)
 # Запуск бота
 if __name__ == "__main__":
+    init_db()
     logging.info('Бот запущен')
     bot.polling(non_stop=True)
