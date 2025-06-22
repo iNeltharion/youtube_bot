@@ -38,8 +38,9 @@ def register_handlers(bot, admin_id):
         if not rows:
             bot.reply_to(message, "Нет аудиозаписей, отправленных ботом в Telegram.")
             return
-        msg = 'Список аудиозаписей, отправленных ботом в Telegram:\n\n'
         for title, file_id in rows:
-            msg += f"<b>{title or 'Без названия'}</b>\n<code>{file_id}</code>\n----------------------\n"
-        for part in smart_split(msg, 4000):
-            bot.send_message(message.chat.id, part, parse_mode='HTML')
+            caption = f"<b>{title or 'Без названия'}</b>"
+            try:
+                bot.send_audio(message.chat.id, file_id, caption=caption, parse_mode='HTML')
+            except Exception as e:
+                bot.send_message(message.chat.id, f"Ошибка отправки аудио: {title}")
