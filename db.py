@@ -34,4 +34,3 @@ def save_link(user, link):
     ))
     conn.commit()
     conn.close()
-
