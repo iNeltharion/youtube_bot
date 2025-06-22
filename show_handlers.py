@@ -24,6 +24,6 @@ def register_handlers(bot, admin_id):
             msg += f"<b>Ссылка:</b> {row[4]}\n"
             msg += f"<b>Время:</b> {row[5]}\n"
             msg += "----------------------\n"
-        # делим длинное сообщение на части и отправляем по очереди
-        for part in smart_split(msg, chars_limit=4000):
+        # smart_split принимает только limit, а не chars_limit
+        for part in smart_split(msg, 4000):
             bot.send_message(message.chat.id, part, parse_mode='HTML')
