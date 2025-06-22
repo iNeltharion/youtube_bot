@@ -46,5 +46,6 @@ jobs:
             cd /home/nel/youtubebot
             sudo apt update
             sudo apt install -y ffmpeg
+            source .venv/bin/activate || true
             pip install -r requirements.txt
             systemctl restart youtubebot.service
