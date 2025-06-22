@@ -1,22 +1,6 @@
 import sqlite3
 from telebot.util import smart_split
 
-def list_telegram_audio(bot, message):
-    conn = sqlite3.connect('youtube_bot.db')
-    c = conn.cursor()
-    c.execute('SELECT audio_title, audio_file_id FROM links WHERE audio_file_id IS NOT NULL ORDER BY id DESC')
-    rows = c.fetchall()
-    conn.close()
-    if not rows:
-        bot.reply_to(message, "Нет аудиозаписей, отправленных ботом в Telegram.")
-        return
-    for title, file_id in rows:
-        caption = f"<b>{title or 'Без названия'}</b>"
-        try:
-            bot.send_audio(message.chat.id, file_id, caption=caption, parse_mode='HTML')
-        except Exception as e:
-            bot.send_message(message.chat.id, f"Ошибка отправки аудио: {title}")
-
 def register_handlers(bot, admin_id):
     @bot.message_handler(commands=['show'])
     def show_db(message):
@@ -43,7 +27,3 @@ def register_handlers(bot, admin_id):
         # smart_split принимает только limit, а не chars_limit
         for part in smart_split(msg, 4000):
             bot.send_message(message.chat.id, part, parse_mode='HTML')
-
-    @bot.message_handler(commands=['list'])
-    def list_command(message):
-        list_telegram_audio(bot, message)
