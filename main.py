@@ -8,6 +8,7 @@ import re
 from urllib.parse import urlparse, urlunparse
 from db import init_db, save_link
 import show_handlers  # Импортируем весь модуль для регистрации хендлеров
+from telebot import types
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -87,13 +88,19 @@ def convert_audio(input_file, output_file):
 # Обработчик команды /start
 @bot.message_handler(commands=['start'])
 def start_command(message):
-    bot.reply_to(message, "Привет! Отправь ссылку на YouTube видео, и я отправлю тебе аудио.")
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    btn_list = types.KeyboardButton("Список аудиозаписей")
+    markup.add(btn_list)
+    bot.reply_to(message, "Привет! Отправь ссылку на YouTube видео, и я отправлю тебе аудио.", reply_markup=markup)
+
+@bot.message_handler(func=lambda message: message.text == "Список аудиозаписей")
+def handle_list_button(message):
+    bot.send_message(message.chat.id, "/list")
 
 # Обработчик сообщений с ссылками
 @bot.message_handler(func=lambda message: re.match(r'(https?://)?(www\.)?(m\.)?(youtube\.com|youtu\.be)/.+', message.text))
 def handle_video(message):
     video_url = clean_url(message.text.strip())
-    save_link(message.from_user, video_url)
 
     # Подтверждение получения ссылки
     bot.send_message(message.chat.id, "Получил ссылку! Начинаю скачивание аудио...")
