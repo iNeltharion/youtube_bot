@@ -23,6 +23,8 @@ def init_db():
 def save_link(user, link, audio_file_id=None, audio_title=None):
     conn = sqlite3.connect('youtube_bot.db')
     c = conn.cursor()
+    # Сохраняем время в человеко-читаемом формате
+    created_at = datetime.now().strftime('%Y-%m-%d %H:%M')
     c.execute('''
         INSERT INTO links (telegram_id, username, first_name, last_name, link, created_at, audio_file_id, audio_title)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -32,7 +34,7 @@ def save_link(user, link, audio_file_id=None, audio_title=None):
         user.first_name,
         user.last_name,
         link,
-        datetime.now().isoformat(),
+        created_at,
         audio_file_id,
         audio_title
     ))
