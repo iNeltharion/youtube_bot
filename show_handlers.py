@@ -1,4 +1,5 @@
 import sqlite3
+from telebot.util import smart_split
 
 def register_handlers(bot, admin_id):
     @bot.message_handler(commands=['show'])
@@ -8,13 +9,13 @@ def register_handlers(bot, admin_id):
             return
         conn = sqlite3.connect('youtube_bot.db')
         c = conn.cursor()
-        c.execute('SELECT telegram_id, username, first_name, last_name, link, created_at FROM links ORDER BY id DESC LIMIT 20')
+        c.execute('SELECT telegram_id, username, first_name, last_name, link, created_at FROM links ORDER BY id DESC')
         rows = c.fetchall()
         conn.close()
         if not rows:
             bot.reply_to(message, "База данных пуста.")
             return
-        msg = '<b>Последние 20 записей:</b>\n\n'
+        msg = ''
         for row in rows:
             msg += f"<b>ID:</b> {row[0]}\n"
             msg += f"<b>Username:</b> {row[1]}\n"
@@ -23,4 +24,6 @@ def register_handlers(bot, admin_id):
             msg += f"<b>Ссылка:</b> {row[4]}\n"
             msg += f"<b>Время:</b> {row[5]}\n"
             msg += "----------------------\n"
-        bot.send_message(message.chat.id, msg, parse_mode='HTML')
+        # делим длинное сообщение на части и отправляем по очереди
+        for part in smart_split(msg, chars_limit=4000):
+            bot.send_message(message.chat.id, part, parse_mode='HTML')
