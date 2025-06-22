@@ -24,4 +24,3 @@ def register_handlers(bot, admin_id):
             msg += f"<b>Время:</b> {row[5]}\n"
             msg += "----------------------\n"
         bot.send_message(message.chat.id, msg, parse_mode='HTML')
-
