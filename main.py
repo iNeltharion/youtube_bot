@@ -95,7 +95,8 @@ def start_command(message):
 
 @bot.message_handler(func=lambda message: message.text == "Список аудиозаписей")
 def handle_list_button(message):
-    bot.send_message(message.chat.id, "/list")
+    from show_handlers import list_telegram_audio
+    list_telegram_audio(bot, message)
 
 # Обработчик сообщений с ссылками
 @bot.message_handler(func=lambda message: re.match(r'(https?://)?(www\.)?(m\.)?(youtube\.com|youtu\.be)/.+', message.text))
