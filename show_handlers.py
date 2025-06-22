@@ -27,3 +27,19 @@ def register_handlers(bot, admin_id):
         # smart_split принимает только limit, а не chars_limit
         for part in smart_split(msg, 4000):
             bot.send_message(message.chat.id, part, parse_mode='HTML')
+
+    @bot.message_handler(commands=['list'])
+    def list_telegram_audio(message):
+        conn = sqlite3.connect('youtube_bot.db')
+        c = conn.cursor()
+        c.execute('SELECT audio_title, audio_file_id FROM links WHERE audio_file_id IS NOT NULL ORDER BY id DESC')
+        rows = c.fetchall()
+        conn.close()
+        if not rows:
+            bot.reply_to(message, "Нет аудиозаписей, отправленных ботом в Telegram.")
+            return
+        msg = 'Список аудиозаписей, отправленных ботом в Telegram:\n\n'
+        for title, file_id in rows:
+            msg += f"<b>{title or 'Без названия'}</b>\n<code>{file_id}</code>\n----------------------\n"
+        for part in smart_split(msg, 4000):
+            bot.send_message(message.chat.id, part, parse_mode='HTML')

@@ -12,25 +12,29 @@ def init_db():
             first_name TEXT,
             last_name TEXT,
             link TEXT,
-            created_at TEXT
+            created_at TEXT,
+            audio_file_id TEXT,
+            audio_title TEXT
         )
     ''')
     conn.commit()
     conn.close()
 
-def save_link(user, link):
+def save_link(user, link, audio_file_id=None, audio_title=None):
     conn = sqlite3.connect('youtube_bot.db')
     c = conn.cursor()
     c.execute('''
-        INSERT INTO links (telegram_id, username, first_name, last_name, link, created_at)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO links (telegram_id, username, first_name, last_name, link, created_at, audio_file_id, audio_title)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         user.id,
         user.username,
         user.first_name,
         user.last_name,
         link,
-        datetime.now().isoformat()
+        datetime.now().isoformat(),
+        audio_file_id,
+        audio_title
     ))
     conn.commit()
     conn.close()
