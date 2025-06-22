@@ -15,7 +15,7 @@ def register_handlers(bot, admin_id):
         if not rows:
             bot.reply_to(message, "База данных пуста.")
             return
-        msg = ''
+        msg = 'База данных:\n\n'
         for row in rows:
             msg += f"<b>ID:</b> {row[0]}\n"
             msg += f"<b>Username:</b> {row[1]}\n"
